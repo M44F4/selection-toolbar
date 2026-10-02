@@ -54,6 +54,12 @@ All actions are registered as Obsidian commands so they can be assigned keyboard
 - Format selection: title case
 - Extract selection to note
 
+## Settings
+
+Open **Settings -> Selection Toolbar** and use **Show floating toolbar** to choose where the toolbar appears: **Everywhere** (default), **Desktop only**, **Mobile only**, or **Never**.
+
+**Desktop only** is useful when the system selection menu covers the toolbar on mobile. Commands work everywhere regardless of this setting.
+
 ## Notes On Formatting
 
 Selection Toolbar uses standard Markdown where possible.

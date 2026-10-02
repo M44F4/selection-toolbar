@@ -25,11 +25,13 @@ import { promptForUrl } from './url-prompt-modal';
 export class FloatingFormatToolbar {
 	private el: HTMLElement;
 	private plugin: Plugin;
+	private isEnabled: () => boolean;
 	private lastEditor: Editor | null = null;
 	private frame: number | null = null;
 
-	constructor(plugin: Plugin) {
+	constructor(plugin: Plugin, isEnabled: () => boolean) {
 		this.plugin = plugin;
+		this.isEnabled = isEnabled;
 		this.el = activeDocument.body.createDiv({
 			cls: 'selection-toolbar',
 		});
@@ -214,6 +216,11 @@ export class FloatingFormatToolbar {
 	}
 
 	private update() {
+		if (!this.isEnabled()) {
+			this.hide();
+			return;
+		}
+
 		const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = view?.editor;
 
