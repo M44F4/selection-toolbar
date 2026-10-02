@@ -21,6 +21,10 @@ If your plugin does not need CSS, delete this file.
 	white-space: nowrap;
 }
 
+.selection-toolbar.is-below {
+	transform: translate(-50%, 8px);
+}
+
 .selection-toolbar-button {
 	min-width: 28px;
 	height: 28px;

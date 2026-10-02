@@ -3,12 +3,18 @@ import type SelectionToolbarPlugin from './main';
 
 export type ToolbarVisibility = 'everywhere' | 'desktop' | 'mobile' | 'never';
 
+export type ToolbarPosition = 'above' | 'below';
+
 export interface SelectionToolbarSettings {
 	toolbarVisibility: ToolbarVisibility;
+	desktopPosition: ToolbarPosition;
+	mobilePosition: ToolbarPosition;
 }
 
 export const DEFAULT_SETTINGS: SelectionToolbarSettings = {
 	toolbarVisibility: 'everywhere',
+	desktopPosition: 'above',
+	mobilePosition: 'below',
 };
 
 const VISIBILITY_OPTIONS: Record<ToolbarVisibility, string> = {
@@ -17,6 +23,15 @@ const VISIBILITY_OPTIONS: Record<ToolbarVisibility, string> = {
 	mobile: 'Mobile only',
 	never: 'Never',
 };
+
+const POSITION_OPTIONS: Record<ToolbarPosition, string> = {
+	above: 'Above selection',
+	below: 'Below selection',
+};
+
+export function getToolbarPosition(settings: SelectionToolbarSettings) {
+	return Platform.isMobile ? settings.mobilePosition : settings.desktopPosition;
+}
 
 export function isToolbarVisible(visibility: ToolbarVisibility) {
 	switch (visibility) {
@@ -55,6 +70,36 @@ export class SelectionToolbarSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.toolbarVisibility =
 							value as ToolbarVisibility;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Position on desktop')
+			.setDesc('Where the toolbar appears relative to the selection.')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions(POSITION_OPTIONS)
+					.setValue(this.plugin.settings.desktopPosition)
+					.onChange(async (value) => {
+						this.plugin.settings.desktopPosition =
+							value as ToolbarPosition;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Position on mobile')
+			.setDesc(
+				'Below can keep the toolbar clear of the system selection menu.',
+			)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions(POSITION_OPTIONS)
+					.setValue(this.plugin.settings.mobilePosition)
+					.onChange(async (value) => {
+						this.plugin.settings.mobilePosition =
+							value as ToolbarPosition;
 						await this.plugin.saveSettings();
 					}),
 			);

@@ -60,6 +60,8 @@ Open **Settings -> Selection Toolbar** and use **Show floating toolbar** to choo
 
 **Desktop only** is useful when the system selection menu covers the toolbar on mobile. Commands work everywhere regardless of this setting.
 
+**Position on desktop** and **Position on mobile** place the toolbar **Above selection** or **Below selection**, separately for each platform. The default is above on desktop and below on mobile, where the system selection menu usually appears above the text.
+
 ## Notes On Formatting
 
 Selection Toolbar uses standard Markdown where possible.

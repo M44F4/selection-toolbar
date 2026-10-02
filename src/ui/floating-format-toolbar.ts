@@ -20,18 +20,24 @@ import {
 	uppercaseSelection,
 } from '../formatting/markdown-formatting';
 import { extractSelectionToNote } from '../notes/extract-selection';
+import type { ToolbarPosition } from '../settings';
 import { promptForUrl } from './url-prompt-modal';
+
+export interface FloatingFormatToolbarOptions {
+	isVisible: () => boolean;
+	getPosition: () => ToolbarPosition;
+}
 
 export class FloatingFormatToolbar {
 	private el: HTMLElement;
 	private plugin: Plugin;
-	private isEnabled: () => boolean;
+	private options: FloatingFormatToolbarOptions;
 	private lastEditor: Editor | null = null;
 	private frame: number | null = null;
 
-	constructor(plugin: Plugin, isEnabled: () => boolean) {
+	constructor(plugin: Plugin, options: FloatingFormatToolbarOptions) {
 		this.plugin = plugin;
-		this.isEnabled = isEnabled;
+		this.options = options;
 		this.el = activeDocument.body.createDiv({
 			cls: 'selection-toolbar',
 		});
@@ -216,7 +222,7 @@ export class FloatingFormatToolbar {
 	}
 
 	private update() {
-		if (!this.isEnabled()) {
+		if (!this.options.isVisible()) {
 			this.hide();
 			return;
 		}
@@ -242,8 +248,11 @@ export class FloatingFormatToolbar {
 
 		this.lastEditor = editor;
 		this.el.show();
+		const isBelow = this.options.getPosition() === 'below';
+
+		this.el.toggleClass('is-below', isBelow);
 		this.el.style.left = `${rect.left + rect.width / 2}px`;
-		this.el.style.top = `${rect.top}px`;
+		this.el.style.top = `${isBelow ? rect.bottom : rect.top}px`;
 	}
 
 	private run(formatter: (editor: Editor) => void | Promise<void>) {
