@@ -73,3 +73,47 @@ If your plugin does not need CSS, delete this file.
 	justify-content: flex-end;
 	gap: 8px;
 }
+
+.selection-toolbar-chips {
+	flex-wrap: nowrap;
+	gap: 4px;
+}
+
+.selection-toolbar-chip {
+	min-width: 32px;
+	opacity: 0.45;
+}
+
+/* Narrow settings layouts stretch every control button to full width. */
+.setting-item
+	.setting-item-control.selection-toolbar-chips
+	> button.selection-toolbar-chip:not(.clickable-icon) {
+	width: auto;
+	flex: 0 0 auto;
+}
+
+/* On narrow layouts the chips share one row instead of wrapping. */
+@container (max-width: 400px) {
+	.setting-item
+		.setting-item-control.selection-toolbar-chips
+		> button.selection-toolbar-chip:not(.clickable-icon) {
+		min-width: 0;
+		flex: 1 1 auto;
+		padding-inline: var(--size-2-2);
+	}
+}
+
+.is-phone
+	.setting-item
+	.setting-item-control.selection-toolbar-chips
+	> button.selection-toolbar-chip:not(.clickable-icon) {
+	min-width: 0;
+	flex: 1 1 auto;
+	padding-inline: var(--size-2-2);
+}
+
+.selection-toolbar-chip.is-active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	opacity: 1;
+}

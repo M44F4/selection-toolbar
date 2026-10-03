@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian';
 import { registerFormattingCommands } from './commands/formatting-commands';
 import {
 	DEFAULT_SETTINGS,
+	getToolbarButtons,
 	getToolbarPosition,
 	isToolbarVisible,
 	SelectionToolbarSettings,
@@ -19,6 +20,7 @@ export default class SelectionToolbarPlugin extends Plugin {
 		this.formatToolbar = new FloatingFormatToolbar(this, {
 			isVisible: () => isToolbarVisible(this.settings.toolbarVisibility),
 			getPosition: () => getToolbarPosition(this.settings),
+			getButtons: () => getToolbarButtons(this.settings),
 		});
 		registerFormattingCommands(this);
 		this.addSettingTab(new SelectionToolbarSettingTab(this.app, this));
