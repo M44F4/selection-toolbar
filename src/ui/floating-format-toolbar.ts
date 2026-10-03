@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Menu, Plugin } from 'obsidian';
+import { Editor, MarkdownView, Menu, Platform, Plugin } from 'obsidian';
 import {
 	applyCallout,
 	applyMarkdownLink,
@@ -22,6 +22,11 @@ import {
 import { extractSelectionToNote } from '../notes/extract-selection';
 import type { ToolbarButtonId, ToolbarPosition } from '../settings';
 import { promptForUrl } from './url-prompt-modal';
+
+const SELECTION_GAP = 8;
+// Clears the selection handles that phones draw under the selected text.
+const MOBILE_GAP_BELOW = 32;
+const EDGE_MARGIN = 8;
 
 export interface FloatingFormatToolbarOptions {
 	isVisible: () => boolean;
@@ -225,7 +230,29 @@ export class FloatingFormatToolbar {
 			this.scheduleUpdate(),
 		);
 
+		this.plugin.registerDomEvent(activeDocument, 'focusout', () =>
+			this.scheduleUpdate(),
+		);
+
+		this.plugin.registerDomEvent(
+			activeDocument,
+			'scroll',
+			() => this.scheduleUpdate(),
+			{ capture: true },
+		);
+
 		this.plugin.registerDomEvent(activeWindow, 'resize', () => this.hide());
+
+		const { workspace } = this.plugin.app;
+		this.plugin.registerEvent(
+			workspace.on('active-leaf-change', () => this.scheduleUpdate()),
+		);
+		this.plugin.registerEvent(
+			workspace.on('file-open', () => this.scheduleUpdate()),
+		);
+		this.plugin.registerEvent(
+			workspace.on('layout-change', () => this.scheduleUpdate()),
+		);
 
 		this.plugin.register(() => this.destroy());
 	}
@@ -250,7 +277,7 @@ export class FloatingFormatToolbar {
 		const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = view?.editor;
 
-		if (!editor || !editor.getSelection().trim()) {
+		if (!view || !editor?.hasFocus() || !editor.getSelection().trim()) {
 			this.hide();
 			return;
 		}
@@ -259,20 +286,43 @@ export class FloatingFormatToolbar {
 			? activeWindow.getSelection()?.getRangeAt(0)
 			: null;
 
-		if (!range) {
+		if (!range || !view.contentEl.contains(range.commonAncestorContainer)) {
 			this.hide();
 			return;
 		}
 
 		const rect = range.getBoundingClientRect();
 
+		if (rect.bottom < 0 || rect.top > activeWindow.innerHeight) {
+			this.hide();
+			return;
+		}
+
 		this.lastEditor = editor;
 		this.el.show();
-		const isBelow = this.options.getPosition() === 'below';
+		this.place(rect);
+	}
 
-		this.el.toggleClass('is-below', isBelow);
-		this.el.style.left = `${rect.left + rect.width / 2}px`;
-		this.el.style.top = `${isBelow ? rect.bottom : rect.top}px`;
+	private place(selection: DOMRect) {
+		const width = this.el.offsetWidth;
+		const height = this.el.offsetHeight;
+		const viewportWidth = activeWindow.innerWidth;
+		const viewportHeight = activeWindow.innerHeight;
+		const gapBelow = Platform.isMobile ? MOBILE_GAP_BELOW : SELECTION_GAP;
+
+		const aboveTop = selection.top - SELECTION_GAP - height;
+		const belowTop = selection.bottom + gapBelow;
+		const fitsAbove = aboveTop >= EDGE_MARGIN;
+		const fitsBelow = belowTop + height <= viewportHeight - EDGE_MARGIN;
+		const below =
+			this.options.getPosition() === 'below'
+				? fitsBelow || !fitsAbove
+				: !fitsAbove && fitsBelow;
+
+		const left = selection.left + selection.width / 2 - width / 2;
+
+		this.el.style.left = `${clamp(left, EDGE_MARGIN, viewportWidth - width - EDGE_MARGIN)}px`;
+		this.el.style.top = `${clamp(below ? belowTop : aboveTop, EDGE_MARGIN, viewportHeight - height - EDGE_MARGIN)}px`;
 	}
 
 	/** Shows only the enabled buttons; returns false when none are enabled. */
@@ -316,4 +366,8 @@ export class FloatingFormatToolbar {
 
 		this.el.remove();
 	}
+}
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(Math.max(value, min), Math.max(min, max));
 }
